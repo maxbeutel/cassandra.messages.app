@@ -10,10 +10,8 @@ class MessageRecipients implements Countable, IteratorAggregate
 {
     private $users = array();
     
-    public function __construct()
+    public function __construct($users)
     {
-        $users = func_get_args();
-        
         $this->validateMinimumAmount($users);
         $this->validateMaximumAmount($users);
         

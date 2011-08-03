@@ -3,10 +3,11 @@
 namespace Sample\Messages\Domain;
 
 use Sample\Users\Domain\User;
+use Sample\Common\Interfaces\DenormalizedEntityData;
 use SimpleCassieUuid;
 use Functional as F;
 
-class Message
+class Message implements DenormalizedEntityData
 {
     private $id;
     
@@ -67,9 +68,9 @@ class Message
         return $this->id;
     }
     
-    public function getSender()
+    public function getSenderId()
     {
-        return $this->sender;
+        return $this->senderId;
     }
     
     public function isParent()
@@ -107,5 +108,10 @@ class Message
             'senderId'      => $this->senderId,
             'recipientIds'  => $this->recipientIds,
         ));
+    }
+
+    public function getEntityIds() 
+    {
+        return array_merge(array($this->senderId), $this->recipientIds);
     }
 }

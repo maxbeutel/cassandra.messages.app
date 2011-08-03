@@ -57,8 +57,10 @@ trait MessagesStore
                     ->keyspace(self::$INBOX_KEYSPACE)
                     ->cf('messages')
                     ->key('user_' . $recipient->getId())
-                    ->column('message_0', 'message_99999999999999')
+                    ->column('message_00000000-0000-0000-0000-000000000000', 'message_zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz')
                     ->slice($maxResults, false);
+        
+        error_log('### cassandra result: ' . count($res) . ' / max: ' . $maxResults);
         
         $res = F\map($res, function(Column $col) {
             return json_decode($col->column->value, true);
