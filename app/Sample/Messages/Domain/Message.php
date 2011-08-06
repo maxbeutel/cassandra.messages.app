@@ -3,20 +3,21 @@
 namespace Sample\Messages\Domain;
 
 use Sample\Users\Domain\User;
-use Sample\Common\Interfaces\DenormalizedEntityData;
 use SimpleCassieUuid;
 use Functional as F;
 
-class Message implements DenormalizedEntityData
+class Message
 {
     private $id;
     
+    private $sender;
     private $senderId;
     
     private $subject;
     
     private $body;
     
+    private $recipients;
     private $recipientIds = array();
     
     public function __construct($subject, $body)
@@ -32,6 +33,7 @@ class Message implements DenormalizedEntityData
         $this->body = $body;
     }
     
+    // internal to message package
     public static function fromStruct(array $struct)
     {
         $message = new static($struct['subject'], $struct['body']);
@@ -41,6 +43,18 @@ class Message implements DenormalizedEntityData
         $message->recipientIds = $struct['recipientIds'];
         
         return $message;
+    }
+    
+    // internal to message package
+    public function toStruct()
+    {
+        return array(
+            'id'            => $this->id,
+            'subject'       => $this->subject,
+            'body'          => $this->body,
+            'senderId'      => $this->senderId,
+            'recipientIds'  => $this->recipientIds,
+        );
     }
     
     private function validateSubjectMinLength($subject)
@@ -68,13 +82,19 @@ class Message implements DenormalizedEntityData
         return $this->id;
     }
     
-    public function getSenderId()
+    public function getSender()
     {
-        return $this->senderId;
+        return $this->sender;
+    }
+    
+    public function getRecipients()
+    {
+        return $this->recipients;
     }
     
     public function isParent()
     {
+        // always returns true for now until chil messages are implemented
         return true;
     }
     
@@ -85,7 +105,10 @@ class Message implements DenormalizedEntityData
     
     public function sendTo(MessageRecipients $recipients, User $sender)
     {
+        $this->sender = $sender;
         $this->senderId = $sender->getId();
+        
+        $this->recipients = $recipients;
         $this->recipientIds = F\Invoke($recipients, 'getId');
         
         foreach ($recipients as $recipient) {
@@ -96,22 +119,5 @@ class Message implements DenormalizedEntityData
     public function replyTo(Message $parentMessage)
     {
         throw new \Exception('not yet implemented');
-    }
-    
-    // internal to message package
-    public function __toString()
-    {
-        return json_encode(array(
-            'id'            => $this->id,
-            'subject'       => $this->subject,
-            'body'          => $this->body,
-            'senderId'      => $this->senderId,
-            'recipientIds'  => $this->recipientIds,
-        ));
-    }
-
-    public function getEntityIds() 
-    {
-        return array_merge(array($this->senderId), $this->recipientIds);
     }
 }

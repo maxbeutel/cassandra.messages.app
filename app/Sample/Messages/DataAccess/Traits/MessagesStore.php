@@ -41,9 +41,9 @@ trait MessagesStore
              ->key('user_' . $recipient->getId())
              ->supercolumn('message_' . ($message->isParent() ? $message->getId() : $message->getParentMessageId()))
              ->column('message_' . $message->getId())
-             ->set((string)$message);
+             ->set(json_encode($message->toStruct()));
         
-        error_log(print_r($message->__toString(), 1));
+        error_log('storing message: ' . json_encode($message->toStruct()));
     }
     
     private function storeOutgoingMessage(Message $message, User $sender)
@@ -73,6 +73,7 @@ trait MessagesStore
     
     private function findThread(User $recipient, $maxResults)
     {
+        throw new \Exception('not yet implemented');
 /*
         $res = $this->simpleCassie
                     ->keyspace(self::INBOX_KEYSPACE)
