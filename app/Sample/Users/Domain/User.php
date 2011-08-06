@@ -22,6 +22,8 @@ class User
     /** @Column(type="array", name="user_friend_ids") */
     private $friendIds = array();
     
+    private $postbox;
+    
     public function __construct()
     {
     }
@@ -31,9 +33,14 @@ class User
         return $this->id;
     }
 
+    public function injectPostbox(Postbox $postbox)
+    {
+        $this->postbox = $postbox;
+    }
+    
     public function postbox()
     {
-        return new Postbox($this);
+        return $this->postbox;
     }
     
     public function isContactOf(User $user)

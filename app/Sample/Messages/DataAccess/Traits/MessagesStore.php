@@ -4,6 +4,7 @@ namespace Sample\Messages\DataAccess\Traits;
 
 use SimpleCassie;
 use Sample\Users\Domain\User;
+use Sample\Users\DataAccess\UserRepository;
 use Sample\Messages\Domain\Message;
 use Functional as F;
 use cassandra_ColumnOrSuperColumn as Column;
@@ -13,21 +14,24 @@ trait MessagesStore
     private static $INBOX_KEYSPACE = 'Messages_Inbox_Test';
     private static $OUTBOX_KEYSPACE = 'Messages_Outbox_Test';
     
-    private static $simpleCassie;
+    private $simpleCassie;
     
-    private function simpleCassie()
+    private $userRepository;
+    
+    public function injectSimpleCassie(SimpleCassie $simpleCassie)
     {
-        if (!self::$simpleCassie) {
-            self::$simpleCassie = new SimpleCassie('localhost',  9160, 100);
-        }
-        
-        return self::$simpleCassie;
+        $this->simpleCassie = $simpleCassie;
+    }
+    
+    public function injectUserRepository(UserRepository $userRepository)
+    {
+        $this->userRepository = $userRepository;
     }
     
     private function storeIncomingMessage(Message $message, User $recipient)
     {
         // store message in inbox
-        $this->simpleCassie()
+        $this->simpleCassie
              ->keyspace(self::$INBOX_KEYSPACE)
              ->cf('messages')
              ->key('user_' . $recipient->getId())
@@ -35,7 +39,7 @@ trait MessagesStore
              ->set((string)$message);
         
         // store message grouped in threads
-        $this->simpleCassie()
+        $this->simpleCassie
              ->keyspace(self::$INBOX_KEYSPACE)
              ->cf('threads')
              ->key('user_' . $recipient->getId())
@@ -53,22 +57,51 @@ trait MessagesStore
     
     private function findReceivedMessages(User $recipient, $maxResults)
     {
-        $res = $this->simpleCassie()
-                    ->keyspace(self::$INBOX_KEYSPACE)
-                    ->cf('messages')
-                    ->key('user_' . $recipient->getId())
-                    ->column('message_00000000-0000-0000-0000-000000000000', 'message_zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz')
-                    ->slice($maxResults, false);
+        $messages = $this->simpleCassie
+                         ->keyspace(self::$INBOX_KEYSPACE)
+                         ->cf('messages')
+                         ->key('user_' . $recipient->getId())
+                         ->column('message_00000000-0000-0000-0000-000000000000', 'message_zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz')
+                         ->slice($maxResults, false);
         
-        error_log('### cassandra result: ' . count($res) . ' / max: ' . $maxResults);
+        #error_log(print_r($messages, 1));
+        #error_log('### cassandra result: ' . count($messages) . ' / max: ' . $maxResults);
         
-        $res = F\map($res, function(Column $col) {
+        $messages = F\map($messages, function(Column $col) {
             return json_decode($col->column->value, true);
         });
         
-        $res = F\map($res, array('Sample\Messages\Domain\Message', 'fromStruct'));
+        $messages = F\map($messages, array('Sample\Messages\Domain\Message', 'fromStruct'));
         
-        return $res;
+        //
+        $userIds = array();
+        
+        F\each($messages, function(Message $message) use(&$userIds) {
+            $userIds[] = $message->getSenderId();
+            $userIds = array_merge($userIds, $message->getRecipientIds());
+        });
+        
+        $users = $this->userRepository->findByIds($userIds);
+        
+        F\each($messages, function(Message $message) use($users) {
+            $senderId = $message->getSenderId();
+            $sender = F\first($users, function(User $user) use($senderId) {
+                return $user->getId() === $senderId;
+            });
+            
+            $message->setSender($sender);
+            
+            
+            $recipientIds = $message->getRecipientIds();
+            $recipients = F\select($users, function(User $user) use($recipientIds) {
+                return in_array($user->getId(), $recipientIds, true);
+            });
+            
+            $message->getRecipients($recipients);
+        });
+        //
+        
+        return $messages;
     }
     
     private function findThread(User $recipient, $maxResults)

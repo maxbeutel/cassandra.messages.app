@@ -5,6 +5,7 @@ namespace Sample\Messages\Domain;
 use Sample\Users\Domain\User;
 use SimpleCassieUuid;
 use Functional as F;
+use BadMethodCallException;
 
 class Message
 {
@@ -87,9 +88,42 @@ class Message
         return $this->sender;
     }
     
+    // internal to messages namespace
+    public function getSenderId()
+    {
+        return $this->senderId;
+    }
+    
+    // internal to messages namespace
+    public function setSender(User $sender)
+    {
+        if ($this->sender) {
+            throw new BadMethodCallException('Sender already set');
+        }
+        
+        $this->sender = $sender;
+    }
+    
+
     public function getRecipients()
     {
         return $this->recipients;
+    }
+    
+    // internal to messages namespace
+    public function getRecipientIds()
+    {
+        return $this->recipientIds;
+    }
+    
+    // internal to messages namespace
+    public function setRecipients(array $recipients)
+    {
+        if (count($this->recipients)) {
+            throw new BadMethodCallException('Recipients already set');
+        }
+        
+        $this->recipients = $recipients;
     }
     
     public function isParent()

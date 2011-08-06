@@ -22,12 +22,12 @@ $app->get('/messages/inbox', function() use($app) {
 
     $messages = $user->postbox()->receivedMessages(15);
     
-    error_log(print_r($messages, 1));
+    #error_log(print_r($messages, 1));
     
-    foreach ($messages as $message) {
+    /*foreach ($messages as $message) {
         error_log('msg id: ' . $message->getId());
-        error_log('sender email: ' . $messages->getSender()->getEmail());
-    }
+        error_log('sender email: ' . $message->getSender()->getEmail());
+    }*/
     
     return 'Hello foo';
 });
