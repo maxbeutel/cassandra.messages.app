@@ -2,11 +2,6 @@
 
 require_once '../config/bootstrap.php';
 
-use Functional as F;
-use InvalidArgumentException;
-use Sample\Common\Interfaces\DenormalizedEntityData;
-
-
 $app->get('/', function() use($app) {
     $sender = $app['dataAccess.users.userRepository']->findById(10);
         
