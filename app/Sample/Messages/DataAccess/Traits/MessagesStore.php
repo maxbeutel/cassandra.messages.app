@@ -91,11 +91,11 @@ trait MessagesStore
         $parentMessageId = $messageInThread->isParent() ? $messageInThread->getId() : $messageInThread->getParentMessageId();
         
         $messages = $this->simpleCassie
-                                ->keyspace(self::$INBOX_KEYSPACE)
-                                ->cf('threads')
-                                ->key('user_' . $recipient->getId())
-                                ->supercolumn('message_' . $parentMessageId)
-                                ->get();
+                         ->keyspace(self::$INBOX_KEYSPACE)
+                         ->cf('threads')
+                         ->key('user_' . $recipient->getId())
+                         ->supercolumn('message_' . $parentMessageId)
+                         ->get();
         
         #error_log('### finding thread');
         #error_log('### user id: ' . $recipient->getId());
