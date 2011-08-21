@@ -7,7 +7,6 @@ use Sample\Users\Domain\User;
 use Sample\Users\DataAccess\UserRepository;
 use Sample\Messages\Domain\Message;
 use Functional as F;
-use cassandra_ColumnOrSuperColumn as Column;
 
 trait MessagesStore
 {
@@ -69,20 +68,42 @@ trait MessagesStore
         
         return $this->mapUsersToMessages($this->hydrateMessages($messages));
     }
-        
-    private function findThread(User $recipient, $maxResults)
-    {
-        throw new \Exception('not yet implemented');
-/*
-        $res = $this->simpleCassie
-                    ->keyspace(self::INBOX_KEYSPACE)
-                    ->cf('threads')
-                    ->key('user_3be7c0e589153c7ae84fdf4c4ac4f360')
-                    ->supercolumn('message_' . $id)
-                    ->slice(15, true);
-*/  
-    }
     
+    private function findReceivedMessage(User $recipient, $messageId)
+    {
+        $message = $this->simpleCassie
+                        ->keyspace(self::$INBOX_KEYSPACE)
+                        ->cf('messages')
+                        ->key('user_' . $recipient->getId())
+                        ->column('message_' . $messageId)
+                        ->get();
+        
+        error_log('### finding single received message');
+        error_log('### user id: ' . $recipient->getId());
+        error_log('### msg id: ' . $messageId);
+        error_log('### found: ' . print_r($message, 1));
+        
+        return $this->mapUsersToMessages($this->hydrateMessages(array($message)))[0];
+    }
+        
+    private function findThread(User $recipient, Message $messageInThread)
+    {
+        $parentMessageId = $messageInThread->isParent() ? $messageInThread->getId() : $messageInThread->getParentMessageId();
+        
+        $messages = $this->simpleCassie
+                                ->keyspace(self::$INBOX_KEYSPACE)
+                                ->cf('threads')
+                                ->key('user_' . $recipient->getId())
+                                ->supercolumn('message_' . $parentMessageId)
+                                ->get();
+        
+        error_log('### finding thread');
+        error_log('### user id: ' . $recipient->getId());
+        error_log('### parent msg id: ' . $parentMessageId);
+        error_log('### found: ' . print_r($messages, 1));
+        
+        return $this->mapUsersToMessages($this->hydrateMessages(!is_array($messages) ? array($messages) : $messages));
+    }
     
     
     // utility functions
@@ -90,8 +111,8 @@ trait MessagesStore
     // map cassandra result objects to message objects
     private function hydrateMessages(array $messages)
     {
-        $messages = F\map($messages, function(Column $col) {
-            return json_decode($col->column->value, true);
+        $messages = F\map($messages, function($col) {
+            return json_decode($col->column ? $col->column->value : $col->super_column->columns[0]->value, true);
         });
         
         $messages = F\map($messages, array('Sample\Messages\Domain\Message', 'fromStruct'));

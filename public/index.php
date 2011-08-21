@@ -22,7 +22,7 @@ $app->get('/messages/inbox', function() use($app) {
 
     $messages = $user->postbox()->receivedMessages(15);
     
-    #error_log(print_r($messages, 1));
+    error_log(print_r($messages, 1));
     
     /*foreach ($messages as $message) {
         error_log('msg id: ' . $message->getId());
@@ -33,9 +33,10 @@ $app->get('/messages/inbox', function() use($app) {
 });
 
 $app->get('/messages/inbox/{id}', function($id) use($app) {
-    $user = $app['dataAccess.users.userRepository']->findById(10);
-
-
+    $user = $app['dataAccess.users.userRepository']->findById(20);
+    
+    $thread = $user->postbox()->threadFor($id);
+    
 
     return 'Hello foo';
 });
