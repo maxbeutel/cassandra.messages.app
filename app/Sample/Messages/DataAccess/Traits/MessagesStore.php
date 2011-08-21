@@ -46,7 +46,7 @@ trait MessagesStore
              ->column('message_' . $message->getId())
              ->set(json_encode($message->toStruct()));
         
-        error_log('storing message: ' . json_encode($message->toStruct()));
+        #error_log('storing message: ' . json_encode($message->toStruct()));
     }
     
     private function storeOutgoingMessage(Message $message, User $sender)
@@ -78,10 +78,10 @@ trait MessagesStore
                         ->column('message_' . $messageId)
                         ->get();
         
-        error_log('### finding single received message');
-        error_log('### user id: ' . $recipient->getId());
-        error_log('### msg id: ' . $messageId);
-        error_log('### found: ' . print_r($message, 1));
+        #error_log('### finding single received message');
+        #error_log('### user id: ' . $recipient->getId());
+        #error_log('### msg id: ' . $messageId);
+        #error_log('### found: ' . print_r($message, 1));
         
         return $this->mapUsersToMessages($this->hydrateMessages(array($message)))[0];
     }
@@ -97,10 +97,10 @@ trait MessagesStore
                                 ->supercolumn('message_' . $parentMessageId)
                                 ->get();
         
-        error_log('### finding thread');
-        error_log('### user id: ' . $recipient->getId());
-        error_log('### parent msg id: ' . $parentMessageId);
-        error_log('### found: ' . print_r($messages, 1));
+        #error_log('### finding thread');
+        #error_log('### user id: ' . $recipient->getId());
+        #error_log('### parent msg id: ' . $parentMessageId);
+        #error_log('### found: ' . print_r($messages, 1));
         
         return $this->mapUsersToMessages($this->hydrateMessages(!is_array($messages) ? array($messages) : $messages));
     }
