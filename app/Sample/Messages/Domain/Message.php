@@ -6,8 +6,9 @@ use Sample\Users\Domain\User;
 use SimpleCassieUuid;
 use Functional as F;
 use BadMethodCallException;
+use JsonSerializable;
 
-class Message
+class Message implements JsonSerializable
 {
     private $id;
     
@@ -47,7 +48,7 @@ class Message
     }
     
     // internal to message package
-    public function toStruct()
+    public function jsonSerialize()
     {
         return array(
             'id'            => $this->id,

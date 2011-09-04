@@ -44,9 +44,9 @@ trait MessagesStore
              ->key('user_' . $recipient->getId())
              ->supercolumn('message_' . ($message->isParent() ? $message->getId() : $message->getParentMessageId()))
              ->column('message_' . $message->getId())
-             ->set(json_encode($message->toStruct()));
+             ->set(json_encode($message));
         
-        #error_log('storing message: ' . json_encode($message->toStruct()));
+        #error_log('storing message: ' . json_encode($message));
     }
     
     private function storeOutgoingMessage(Message $message, User $sender)
