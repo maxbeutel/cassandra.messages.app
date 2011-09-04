@@ -43,8 +43,8 @@ class Postbox
         return $this->findReceivedMessages($this->owner, $maxResults);
     }
     
-    public function thread()
+    public function threadFor($messageInThreadId)
     {
-        
+        $thread = $this->findThread($this->owner, $this->findReceivedMessage($this->owner, $messageInThreadId));
     }
 }

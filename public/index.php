@@ -9,7 +9,7 @@ $app->get('/', function() use($app) {
     $recipient_2 = $app['repositories.users.userRepository']->findById(30);
     $recipient_3 = $app['repositories.users.userRepository']->findById(40);
 
-    $messageRecipients = new Sample\Messages\Domain\MessageRecipients($recipient_1, $recipient_2, $recipient_3);
+    $messageRecipients = new Sample\Messages\Domain\MessageRecipients(array($recipient_1, $recipient_2, $recipient_3));
     
     $message = new Sample\Messages\Domain\Message('message subject', 'message body');
     $message->sendTo($messageRecipients, $sender);
@@ -24,13 +24,19 @@ $app->get('/messages/inbox', function() use($app) {
     
     error_log(print_r($messages, 1));
     
+    /*foreach ($messages as $message) {
+        error_log('msg id: ' . $message->getId());
+        error_log('sender email: ' . $message->getSender()->getEmail());
+    }*/
+    
     return 'Hello foo';
 });
 
 $app->get('/messages/inbox/{id}', function($id) use($app) {
-    $user = $app['dataAccess.users.userRepository']->findById(10);
-
-
+    $user = $app['dataAccess.users.userRepository']->findById(20);
+    
+    $thread = $user->postbox()->threadFor($id);
+    
 
     return 'Hello foo';
 });

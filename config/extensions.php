@@ -30,7 +30,6 @@ $app->register(new Silex\Extension\TwigExtension(), array(
     'twig.class_path' => APPLICATION_PATH . '/vendor/Silex/vendor/twig/lib',
 ));
 
-/*
 $app->register(new Simplecassie\Extension\CassandraExtension(), array(
     'simplecassie.class_path'       => APPLICATION_PATH . '/vendor/SimpleCassie.php',
     'simplecassie.host'             => 'localhost',
@@ -38,7 +37,6 @@ $app->register(new Simplecassie\Extension\CassandraExtension(), array(
     'simplecassie.timeout'          => 100,
     'simplecassie.testConnection'   => true,
 ));
-*/
 
 $app->register(new Silex\Extension\MonologExtension(), array(
     'monolog.logfile'       => APPLICATION_PATH . '/log/app.log',

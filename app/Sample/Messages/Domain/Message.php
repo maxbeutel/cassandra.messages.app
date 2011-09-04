@@ -5,17 +5,21 @@ namespace Sample\Messages\Domain;
 use Sample\Users\Domain\User;
 use SimpleCassieUuid;
 use Functional as F;
+use BadMethodCallException;
+use JsonSerializable;
 
-class Message
+class Message implements JsonSerializable
 {
     private $id;
     
+    private $sender;
     private $senderId;
     
     private $subject;
     
     private $body;
     
+    private $recipients;
     private $recipientIds = array();
     
     public function __construct($subject, $body)
@@ -31,6 +35,7 @@ class Message
         $this->body = $body;
     }
     
+    // internal to message package
     public static function fromStruct(array $struct)
     {
         $message = new static($struct['subject'], $struct['body']);
@@ -40,6 +45,18 @@ class Message
         $message->recipientIds = $struct['recipientIds'];
         
         return $message;
+    }
+    
+    // internal to message package
+    public function jsonSerialize()
+    {
+        return array(
+            'id'            => $this->id,
+            'subject'       => $this->subject,
+            'body'          => $this->body,
+            'senderId'      => $this->senderId,
+            'recipientIds'  => $this->recipientIds,
+        );
     }
     
     private function validateSubjectMinLength($subject)
@@ -72,8 +89,47 @@ class Message
         return $this->sender;
     }
     
+    // internal to messages namespace
+    public function getSenderId()
+    {
+        return $this->senderId;
+    }
+    
+    // internal to messages namespace
+    public function setSender(User $sender)
+    {
+        if ($this->sender) {
+            throw new BadMethodCallException('Sender already set');
+        }
+        
+        $this->sender = $sender;
+    }
+    
+
+    public function getRecipients()
+    {
+        return $this->recipients;
+    }
+    
+    // internal to messages namespace
+    public function getRecipientIds()
+    {
+        return $this->recipientIds;
+    }
+    
+    // internal to messages namespace
+    public function setRecipients(array $recipients)
+    {
+        if (count($this->recipients)) {
+            throw new BadMethodCallException('Recipients already set');
+        }
+        
+        $this->recipients = $recipients;
+    }
+    
     public function isParent()
     {
+        // always returns true for now until chil messages are implemented
         return true;
     }
     
@@ -84,7 +140,10 @@ class Message
     
     public function sendTo(MessageRecipients $recipients, User $sender)
     {
+        $this->sender = $sender;
         $this->senderId = $sender->getId();
+        
+        $this->recipients = $recipients;
         $this->recipientIds = F\Invoke($recipients, 'getId');
         
         foreach ($recipients as $recipient) {
@@ -95,17 +154,5 @@ class Message
     public function replyTo(Message $parentMessage)
     {
         throw new \Exception('not yet implemented');
-    }
-    
-    // internal to message package
-    public function __toString()
-    {
-        return json_encode(array(
-            'id'            => $this->id,
-            'subject'       => $this->subject,
-            'body'          => $this->body,
-            'senderId'      => $this->senderId,
-            'recipientIds'  => $this->recipientIds,
-        ));
     }
 }

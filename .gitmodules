@@ -1,0 +1,10 @@
+[submodule "vendor/Silex"]
+    path = vendor/Silex
+    url = https://github.com/fabpot/Silex
+[submodule "vendor/Silex-extensions/nutwerk-orm-extension"]
+    path = vendor/Silex-extensions/nutwerk-orm-extension
+    url = https://github.com/mjakubowski/nutwerk-orm-extension
+[submodule "vendor/Silex-extensions/silex.simplecassie.extension"]
+    path = vendor/Silex-extensions/silex.simplecassie.extension
+    url = https://github.com/maxbeutel/silex.simplecassie.extension
+
